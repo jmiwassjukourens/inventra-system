@@ -2,7 +2,6 @@ package com.inventra.catalog.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.inventra.catalog.dtos.ProductRequestDTO;
 import com.inventra.catalog.dtos.ProductResponseDTO;
@@ -37,7 +36,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @TransactionalEventListener
+    @Transactional
     public ProductResponseDTO getById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Product not found with id: " + id));
