@@ -13,9 +13,9 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>catalog</artifactId>
-    <name>catalog</name>
-    <description>Catalog microservice</description>
+    <artifactId>suppliers</artifactId>
+    <name>suppliers</name>
+    <description>Suppliers microservice</description>
 
 
     <dependencies>
@@ -40,8 +40,6 @@
 
 
 
-
-        <!-- Dependencias de prueba -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -58,6 +56,11 @@
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
     </dependencies>
