@@ -11,6 +11,7 @@ import com.inventra.catalog.exceptions.BadRequestException;
 import com.inventra.catalog.exceptions.NotFoundException;
 import com.inventra.catalog.model.Stock;
 import com.inventra.catalog.model.StockMovement;
+import com.inventra.catalog.repositories.ProductRepository;
 import com.inventra.catalog.repositories.StockMovementRepository;
 import com.inventra.catalog.repositories.StockMovementSpecifications;
 import com.inventra.catalog.repositories.StockRepository;
@@ -26,24 +27,30 @@ public class StockServiceImpl implements StockService {
 
     private final StockRepository stockRepository;
     private final StockMovementRepository movementRepository;
+    private final ProductRepository productRepository;
 
     @Override
     @Transactional
     public void processMovement(StockMovementDTO dto) {
 
-        Stock stock = stockRepository.findByProductId(dto.getProductId())
-                .orElseThrow(() -> new NotFoundException("Stock not found for productId: " + dto.getProductId()));
+        Stock stock;
 
         if ("OUT".equalsIgnoreCase(dto.getType())) {
-
-            if (stock.getQuantity() < dto.getQuantity()) {
+            stock = stockRepository.findByProductId(dto.getProductId()).orElse(null);
+            int available = stock == null ? 0 : stock.getQuantity();
+            if (available < dto.getQuantity()) {
                 throw new BadRequestException("Not enough stock");
             }
-
+            if (stock == null) {
+                // No row and available (0) >= quantity only when quantity is 0
+                persistMovement(dto);
+                return;
+            }
             stock.setQuantity(stock.getQuantity() - dto.getQuantity());
 
         } else if ("IN".equalsIgnoreCase(dto.getType())) {
-
+            stock = stockRepository.findByProductId(dto.getProductId())
+                    .orElseGet(() -> ensureStockRowForNewInbound(dto.getProductId()));
             stock.setQuantity(stock.getQuantity() + dto.getQuantity());
 
         } else {
@@ -52,23 +59,37 @@ public class StockServiceImpl implements StockService {
 
         stockRepository.save(stock);
 
-        StockMovement movement = StockMovement.builder()
+        persistMovement(dto);
+    }
+
+    /**
+     * First IN for a product: create a stock row at 0, then increment. Requires a catalog product.
+     */
+    private Stock ensureStockRowForNewInbound(Long productId) {
+        if (!productRepository.existsById(productId)) {
+            throw new NotFoundException("Product not found with id: " + productId);
+        }
+        return stockRepository.save(Stock.builder()
+                .productId(productId)
+                .quantity(0)
+                .build());
+    }
+
+    private void persistMovement(StockMovementDTO dto) {
+        movementRepository.save(StockMovement.builder()
                 .productId(dto.getProductId())
                 .quantity(dto.getQuantity())
                 .type(dto.getType())
                 .referenceId(dto.getReferenceId())
-                .build();
-
-        movementRepository.save(movement);
+                .build());
     }
 
     @Override
     @Transactional(readOnly = true)
     public Integer getAvailableStock(Long productId) {
-        Stock stock = stockRepository.findByProductId(productId)
-                .orElseThrow(() -> new NotFoundException("Stock not found"));
-
-        return stock.getQuantity();
+        return stockRepository.findByProductId(productId)
+                .map(Stock::getQuantity)
+                .orElse(0);
     }
 
     @Override
