@@ -1,16 +1,26 @@
 package com.inventra.sales.controllers;
 
 
+import com.inventra.sales.dtos.SaleRequestDTO;
+import com.inventra.sales.dtos.SaleResponseDTO;
+import com.inventra.sales.dtos.SaleSummaryResponseDTO;
+import com.inventra.sales.services.SaleService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.*;
-import io.swagger.v3.oas.annotations.responses.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.inventra.sales.dtos.SaleRequestDTO;
-import com.inventra.sales.dtos.SaleResponseDTO;
-import com.inventra.sales.services.SaleService;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/sales")
@@ -19,6 +29,23 @@ import com.inventra.sales.services.SaleService;
 public class SaleController {
 
     private final SaleService saleService;
+
+    @Operation(summary = "Listar ventas con filtros opcionales")
+    @GetMapping
+    public ResponseEntity<Page<SaleSummaryResponseDTO>> search(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            @RequestParam(required = false) String paymentStatus,
+            @PageableDefault(size = 20, sort = "saleDate", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(saleService.search(from, to, paymentStatus, pageable));
+    }
+
+    @Operation(summary = "Ventas por cliente")
+    @GetMapping("/by-customer/{customerId}")
+    public ResponseEntity<List<SaleSummaryResponseDTO>> byCustomer(
+            @Parameter(description = "Customer id (Accounts service)") @PathVariable Long customerId) {
+        return ResponseEntity.ok(saleService.findByCustomerId(customerId));
+    }
 
     @Operation(summary = "Crear una venta")
     @ApiResponses({

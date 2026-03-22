@@ -1,5 +1,6 @@
 package com.inventra.suppliers.controllers;
 
+import com.inventra.suppliers.dtos.ProductSupplierReportRowDTO;
 import com.inventra.suppliers.dtos.*;
 import com.inventra.suppliers.services.SupplierService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,6 +38,12 @@ public class SupplierController {
             SupplierRequestDTO dto) {
 
         return ResponseEntity.ok(supplierService.create(dto));
+    }
+
+    @Operation(summary = "Reporte: productos con datos de proveedor (enriquecido desde catálogo)")
+    @GetMapping("/report/products")
+    public ResponseEntity<List<ProductSupplierReportRowDTO>> productsWithSuppliersReport() {
+        return ResponseEntity.ok(supplierService.getProductsWithSuppliersReport());
     }
 
     @Operation(summary = "Obtener todos los proveedores")

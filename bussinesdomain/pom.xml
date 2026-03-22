@@ -21,7 +21,11 @@
     </properties>
 
     <modules>
-        <module>bussiness</module>
+        <module>catalog</module>
+        <module>sales</module>
+        <module>purchases</module>
+        <module>suppliers</module>
+        <module>accounts</module>
     </modules>
 
     <dependencies>

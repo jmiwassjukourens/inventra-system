@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.inventra.suppliers.dtos.ProductDTO;
+import com.inventra.suppliers.dtos.ProductSupplierReportRowDTO;
 import com.inventra.suppliers.dtos.SupplierProductDTO;
 import com.inventra.suppliers.dtos.SupplierRequestDTO;
 import com.inventra.suppliers.dtos.SupplierResponseDTO;
@@ -15,6 +16,9 @@ import com.inventra.suppliers.repositories.SupplierProductRepository;
 import com.inventra.suppliers.repositories.SupplierRepository;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -87,6 +91,32 @@ public class SupplierServiceImpl implements SupplierService {
                 .toList();
 
         return inventoryClient.getProductsByIds(productIds);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductSupplierReportRowDTO> getProductsWithSuppliersReport() {
+        Map<Long, Supplier> suppliersById = supplierRepository.findAll().stream()
+                .collect(Collectors.toMap(Supplier::getId, Function.identity()));
+        Map<Long, ProductDTO> productsById = inventoryClient.getAllProducts().stream()
+                .filter(p -> p.getId() != null)
+                .collect(Collectors.toMap(ProductDTO::getId, Function.identity(), (a, b) -> a));
+
+        return supplierProductRepository.findAll().stream()
+                .map(sp -> {
+                    Supplier s = suppliersById.get(sp.getSupplierId());
+                    ProductDTO p = productsById.get(sp.getProductId());
+                    return ProductSupplierReportRowDTO.builder()
+                            .productId(sp.getProductId())
+                            .productName(p != null ? p.getName() : null)
+                            .productSku(p != null ? p.getSku() : null)
+                            .supplierId(sp.getSupplierId())
+                            .supplierName(s != null ? s.getName() : null)
+                            .purchasePrice(sp.getPurchasePrice())
+                            .deliveryTimeDays(sp.getDeliveryTimeDays())
+                            .build();
+                })
+                .toList();
     }
 
     private SupplierResponseDTO mapToDTO(Supplier supplier) {

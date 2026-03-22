@@ -15,5 +15,6 @@ public class SaleResponseDTO {
     private LocalDateTime saleDate;
     private BigDecimal totalAmount;
     private String status;
+    private String paymentStatus;
     private List<SaleItemDTO> items;
 }

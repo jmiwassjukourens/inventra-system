@@ -9,7 +9,15 @@ import org.springframework.web.bind.annotation.*;
 
 import com.inventra.purchases.dtos.PurchaseRequestDTO;
 import com.inventra.purchases.dtos.PurchaseResponseDTO;
+import com.inventra.purchases.dtos.PurchaseSummaryResponseDTO;
 import com.inventra.purchases.services.PurchaseService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/purchases")
@@ -18,6 +26,15 @@ import com.inventra.purchases.services.PurchaseService;
 public class PurchaseController {
 
     private final PurchaseService purchaseService;
+
+    @Operation(summary = "Listar órdenes de compra por rango de fechas")
+    @GetMapping
+    public ResponseEntity<Page<PurchaseSummaryResponseDTO>> search(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            @PageableDefault(size = 20, sort = "orderDate", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(purchaseService.search(from, to, pageable));
+    }
 
     @Operation(summary = "Crear una orden de compra")
     @ApiResponses({

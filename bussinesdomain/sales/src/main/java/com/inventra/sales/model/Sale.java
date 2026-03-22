@@ -26,5 +26,7 @@ public class Sale {
 
     private BigDecimal totalAmount;
 
-    private String status; // COMPLETED, CANCELLED
+    private String status; // PENDING, COMPLETED, CANCELLED
+
+    private String paymentStatus; // PAID, UNPAID
 }

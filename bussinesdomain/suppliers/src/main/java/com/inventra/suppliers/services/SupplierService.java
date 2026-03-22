@@ -5,6 +5,7 @@ package com.inventra.suppliers.services;
 import java.util.List;
 
 import com.inventra.suppliers.dtos.ProductDTO;
+import com.inventra.suppliers.dtos.ProductSupplierReportRowDTO;
 import com.inventra.suppliers.dtos.SupplierProductDTO;
 import com.inventra.suppliers.dtos.SupplierRequestDTO;
 import com.inventra.suppliers.dtos.SupplierResponseDTO;
@@ -22,4 +23,6 @@ public interface SupplierService {
     void addProductToSupplier(SupplierProductDTO dto);
 
     List<ProductDTO> getProductsBySupplier(Long supplierId);
+
+    List<ProductSupplierReportRowDTO> getProductsWithSuppliersReport();
 }

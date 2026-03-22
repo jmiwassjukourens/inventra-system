@@ -7,7 +7,9 @@ import com.inventra.catalog.dtos.ProductRequestDTO;
 import com.inventra.catalog.dtos.ProductResponseDTO;
 import com.inventra.catalog.exceptions.NotFoundException;
 import com.inventra.catalog.model.Product;
+import com.inventra.catalog.model.Stock;
 import com.inventra.catalog.repositories.ProductRepository;
+import com.inventra.catalog.repositories.StockRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -18,6 +20,7 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final StockRepository stockRepository;
 
 
     @Override
@@ -32,7 +35,12 @@ public class ProductServiceImpl implements ProductService {
                 .active(dto.isActive())
                 .build();
 
-        return mapToDTO(productRepository.save(product));
+        Product saved = productRepository.save(product);
+        stockRepository.save(Stock.builder()
+                .productId(saved.getId())
+                .quantity(0)
+                .build());
+        return mapToDTO(saved);
     }
 
     @Override

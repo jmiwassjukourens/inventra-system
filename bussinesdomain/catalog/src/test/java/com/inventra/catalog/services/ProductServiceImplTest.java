@@ -4,7 +4,9 @@ import com.inventra.catalog.dtos.ProductRequestDTO;
 import com.inventra.catalog.dtos.ProductResponseDTO;
 import com.inventra.catalog.exceptions.NotFoundException;
 import com.inventra.catalog.model.Product;
+import com.inventra.catalog.model.Stock;
 import com.inventra.catalog.repositories.ProductRepository;
+import com.inventra.catalog.repositories.StockRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +29,9 @@ class ProductServiceImplTest {
 
     @Mock
     private ProductRepository productRepository;
+
+    @Mock
+    private StockRepository stockRepository;
 
     @InjectMocks
     private ProductServiceImpl productService;
@@ -57,6 +62,7 @@ class ProductServiceImplTest {
                 .build();
 
         when(productRepository.save(any(Product.class))).thenReturn(saved);
+        when(stockRepository.save(any(Stock.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ProductResponseDTO result = productService.create(request);
 
@@ -68,6 +74,11 @@ class ProductServiceImplTest {
         verify(productRepository).save(captor.capture());
         assertThat(captor.getValue().getId()).isNull();
         assertThat(captor.getValue().getName()).isEqualTo("Test name");
+
+        ArgumentCaptor<Stock> stockCaptor = ArgumentCaptor.forClass(Stock.class);
+        verify(stockRepository).save(stockCaptor.capture());
+        assertThat(stockCaptor.getValue().getProductId()).isEqualTo(1L);
+        assertThat(stockCaptor.getValue().getQuantity()).isZero();
     }
 
     @Test

@@ -11,8 +11,13 @@ import com.inventra.purchases.dtos.StockMovementDTO;
 import com.inventra.purchases.exceptions.NotFoundException;
 import com.inventra.purchases.model.PurchaseOrder;
 import com.inventra.purchases.model.PurchaseOrderItem;
+import com.inventra.purchases.dtos.PurchaseSummaryResponseDTO;
 import com.inventra.purchases.repositories.PurchaseOrderItemRepository;
 import com.inventra.purchases.repositories.PurchaseOrderRepository;
+import com.inventra.purchases.repositories.PurchaseOrderSpecifications;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -93,6 +98,23 @@ public class PurchaseServiceImpl implements PurchaseService {
         }).toList();
 
         return mapToResponse(order, dtoItems);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PurchaseSummaryResponseDTO> search(LocalDateTime from, LocalDateTime to, Pageable pageable) {
+        Specification<PurchaseOrder> spec = PurchaseOrderSpecifications.withOrderDateBetween(from, to);
+        return purchaseRepository.findAll(spec, pageable).map(this::mapSummary);
+    }
+
+    private PurchaseSummaryResponseDTO mapSummary(PurchaseOrder order) {
+        return PurchaseSummaryResponseDTO.builder()
+                .id(order.getId())
+                .supplierId(order.getSupplierId())
+                .orderDate(order.getOrderDate())
+                .status(order.getStatus())
+                .totalAmount(order.getTotalAmount())
+                .build();
     }
 
     private PurchaseResponseDTO mapToResponse(PurchaseOrder order, List<PurchaseItemDTO> items) {

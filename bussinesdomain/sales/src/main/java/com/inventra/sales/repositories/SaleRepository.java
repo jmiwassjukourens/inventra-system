@@ -1,8 +1,12 @@
 package com.inventra.sales.repositories;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import com.inventra.sales.model.Sale;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface SaleRepository extends JpaRepository<Sale, Long> {
+import java.util.List;
+
+public interface SaleRepository extends JpaRepository<Sale, Long>, JpaSpecificationExecutor<Sale> {
+
+    List<Sale> findByCustomerIdOrderBySaleDateDesc(Long customerId);
 }
