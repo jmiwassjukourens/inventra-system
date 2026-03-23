@@ -15,6 +15,7 @@ import com.inventra.purchases.dtos.PurchaseSummaryResponseDTO;
 import com.inventra.purchases.repositories.PurchaseOrderItemRepository;
 import com.inventra.purchases.repositories.PurchaseOrderRepository;
 import com.inventra.purchases.repositories.PurchaseOrderSpecifications;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -35,6 +36,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Transactional
     public PurchaseResponseDTO create(PurchaseRequestDTO request) {
 
+        // 1. Create order
         PurchaseOrder order = PurchaseOrder.builder()
                 .supplierId(request.getSupplierId())
                 .orderDate(LocalDateTime.now())
@@ -46,6 +48,7 @@ public class PurchaseServiceImpl implements PurchaseService {
 
         BigDecimal total = BigDecimal.ZERO;
 
+        // 2. Process items
         for (PurchaseItemDTO itemDTO : request.getItems()) {
 
             PurchaseOrderItem item = PurchaseOrderItem.builder()
@@ -57,21 +60,32 @@ public class PurchaseServiceImpl implements PurchaseService {
 
             itemRepository.save(item);
 
+            // Calculate total
             total = total.add(
                     itemDTO.getUnitPrice()
                             .multiply(BigDecimal.valueOf(itemDTO.getQuantity()))
             );
 
-            
+            // 3. Create stock movement (IN)
             StockMovementDTO movement = new StockMovementDTO();
             movement.setProductId(itemDTO.getProductId());
             movement.setQuantity(itemDTO.getQuantity());
-            movement.setType("IN");
+            movement.setType("IN"); // purchase always increases stock
             movement.setReferenceId(order.getId());
 
-            inventoryClient.createStockMovement(movement);
+            // 4. Call inventory service (IMPORTANT: fail fast)
+            try {
+                inventoryClient.createStockMovement(movement);
+            } catch (Exception e) {
+                // rollback purchase if inventory fails
+                throw new RuntimeException(
+                        "Failed to update stock for productId: " + itemDTO.getProductId(),
+                        e
+                );
+            }
         }
 
+        // 5. Finalize order
         order.setTotalAmount(total);
         order.setStatus("RECEIVED");
 
@@ -103,8 +117,11 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     @Transactional(readOnly = true)
     public Page<PurchaseSummaryResponseDTO> search(LocalDateTime from, LocalDateTime to, Pageable pageable) {
-        Specification<PurchaseOrder> spec = PurchaseOrderSpecifications.withOrderDateBetween(from, to);
-        return purchaseRepository.findAll(spec, pageable).map(this::mapSummary);
+        Specification<PurchaseOrder> spec =
+                PurchaseOrderSpecifications.withOrderDateBetween(from, to);
+
+        return purchaseRepository.findAll(spec, pageable)
+                .map(this::mapSummary);
     }
 
     private PurchaseSummaryResponseDTO mapSummary(PurchaseOrder order) {
