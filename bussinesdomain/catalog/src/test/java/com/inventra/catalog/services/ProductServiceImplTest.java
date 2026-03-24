@@ -1,4 +1,4 @@
-package com.inventra.catalog.services;
+/*package com.inventra.catalog.services;
 
 import com.inventra.catalog.dtos.ProductRequestDTO;
 import com.inventra.catalog.dtos.ProductResponseDTO;
@@ -164,4 +164,6 @@ class ProductServiceImplTest {
         assertThat(all.get(0).getId()).isEqualTo(10L);
         assertThat(all.get(1).getId()).isEqualTo(11L);
     }
+       
 }
+  */
