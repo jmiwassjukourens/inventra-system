@@ -1,0 +1,14 @@
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          default-label: main
+          uri: https://github.com/jmiwassjukourens/inventra-config-repo/
+          username: jmiwassjukourens
+          password: ${GIT_TOKEN}
+  application:
+      name: inventra-config-server
+
+server:
+  port: 8888
