@@ -1,7 +1,6 @@
 package com.inventra.sales.configuration;
 
 import io.netty.channel.ChannelOption;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,19 +21,23 @@ public class WebClientConfig {
 
     @Bean
     @LoadBalanced
-    public WebClient inventoryWebClient(@Value("catalog") String baseUrl) {
-        return WebClient.builder()
+    public WebClient.Builder webClientBuilder() {
+        return WebClient.builder();
+    }
+
+    @Bean
+    public WebClient inventoryWebClient(@LoadBalanced WebClient.Builder builder) {
+        return builder.clone()
                 .clientConnector(new ReactorClientHttpConnector(httpClient()))
-                .baseUrl(baseUrl)
+                .baseUrl("http://catalog")
                 .build();
     }
 
     @Bean
-    @LoadBalanced
-    public WebClient accountsWebClient(@Value("accounts") String baseUrl) {
-        return WebClient.builder()
+    public WebClient accountsWebClient(@LoadBalanced WebClient.Builder builder) {
+        return builder.clone()
                 .clientConnector(new ReactorClientHttpConnector(httpClient()))
-                .baseUrl(baseUrl)
+                .baseUrl("http://accounts")
                 .build();
     }
 }

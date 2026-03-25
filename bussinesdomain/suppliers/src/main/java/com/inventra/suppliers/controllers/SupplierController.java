@@ -1,6 +1,5 @@
 package com.inventra.suppliers.controllers;
 
-import com.inventra.suppliers.dtos.ProductSupplierReportRowDTO;
 import com.inventra.suppliers.dtos.*;
 import com.inventra.suppliers.services.SupplierService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -95,7 +94,6 @@ public class SupplierController {
                     content = @Content(schema = @Schema(implementation = SupplierProductDTO.class))
             )
             SupplierProductDTO dto) {
-
         supplierService.addProductToSupplier(dto);
         return ResponseEntity.ok().build();
     }

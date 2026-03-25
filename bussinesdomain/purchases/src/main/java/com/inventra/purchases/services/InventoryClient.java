@@ -2,7 +2,11 @@ package com.inventra.purchases.services;
 
 import com.inventra.purchases.dtos.StockMovementDTO;
 import com.inventra.purchases.exceptions.ExternalServiceException;
+import com.netflix.discovery.converters.Auto;
+
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -10,11 +14,14 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 @Component
 @RequiredArgsConstructor
 public class InventoryClient {
-
-    private final WebClient inventoryWebClient;
+    @Autowired
+    private  WebClient inventoryWebClient;
 
     public void createStockMovement(StockMovementDTO dto) {
         try {
+            System.out.println("Creating stock movement for product " + dto.getProductId() + " with quantity " + dto.getQuantity());
+            System.out.println("Calling URL: http://catalog/api/stocks/movements");
+            System.out.println("WebClient instance: " + inventoryWebClient);
             inventoryWebClient.post()
                     .uri("/api/stocks/movements")
                     .bodyValue(dto)

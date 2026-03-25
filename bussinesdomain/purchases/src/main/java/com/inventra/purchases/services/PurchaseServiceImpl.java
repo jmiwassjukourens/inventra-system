@@ -79,7 +79,7 @@ public class PurchaseServiceImpl implements PurchaseService {
             } catch (Exception e) {
                 // rollback purchase if inventory fails
                 throw new RuntimeException(
-                        "Failed to update stock for productId: " + itemDTO.getProductId(),
+                        "Failed to update stock for productId: " + itemDTO.getProductId() + ": "    + e.getMessage(),
                         e
                 );
             }
