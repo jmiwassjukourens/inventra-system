@@ -2,6 +2,7 @@ package com.inventra.purchases.configuration;
 
 import io.netty.channel.ChannelOption;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -14,7 +15,8 @@ import java.time.Duration;
 public class WebClientConfig {
 
     @Bean
-    public WebClient inventoryWebClient(@Value("${inventra.catalog.base-url}") String baseUrl) {
+    @LoadBalanced
+    public WebClient inventoryWebClient(@Value("catalog") String baseUrl) {
         HttpClient httpClient = HttpClient.create()
                 .responseTimeout(Duration.ofSeconds(15))
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5_000);

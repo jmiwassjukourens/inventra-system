@@ -2,6 +2,7 @@ package com.inventra.sales.configuration;
 
 import io.netty.channel.ChannelOption;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -20,7 +21,8 @@ public class WebClientConfig {
     }
 
     @Bean
-    public WebClient inventoryWebClient(@Value("${inventra.catalog.base-url}") String baseUrl) {
+    @LoadBalanced
+    public WebClient inventoryWebClient(@Value("catalog") String baseUrl) {
         return WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient()))
                 .baseUrl(baseUrl)
@@ -28,7 +30,8 @@ public class WebClientConfig {
     }
 
     @Bean
-    public WebClient accountsWebClient(@Value("${inventra.accounts.base-url}") String baseUrl) {
+    @LoadBalanced
+    public WebClient accountsWebClient(@Value("accounts") String baseUrl) {
         return WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient()))
                 .baseUrl(baseUrl)
