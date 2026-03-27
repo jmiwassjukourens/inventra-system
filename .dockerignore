@@ -1,0 +1,10 @@
+.git
+.idea
+.vscode
+**/target
+**/.mvn
+**/mvnw
+**/mvnw.cmd
+**/HELP.md
+**/hs_err_pid*.log
+agent-transcripts

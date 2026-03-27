@@ -1,0 +1,193 @@
+services:
+  config-server:
+    build:
+      context: .
+      dockerfile: infraestructure/config-server/Dockerfile
+    container_name: inventra-config-server
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      SERVER_PORT: 8888
+      REPOSITORY_PATH: ${REPOSITORY_PATH:-https://github.com/jmiwassjukourens/inventra-config-repo/}
+      GIT_USERNAME: ${GIT_USERNAME:-}
+      GIT_TOKEN: ${GIT_TOKEN:-}
+    ports:
+      - "8888:8888"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8888/actuator/health | grep -q UP"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - inventra-net
+
+  eurekaserver:
+    build:
+      context: .
+      dockerfile: infraestructure/eurekaserver/Dockerfile
+    container_name: inventra-eureka
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      SERVER_PORT: 8761
+    ports:
+      - "8761:8761"
+    depends_on:
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health | grep -q UP"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - inventra-net
+
+  mysql:
+    image: mysql:8.4
+    container_name: inventra-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_USER: ${MYSQL_USER:-inventra}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-inventra}
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - inventra-net
+
+  catalog:
+    build:
+      context: .
+      dockerfile: bussinesdomain/catalog/Dockerfile
+    container_name: inventra-catalog
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_SERVER_URL: http://eurekaserver:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/catalog_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-inventra}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-inventra}
+    ports:
+      - "8081:8080"
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    networks:
+      - inventra-net
+
+  suppliers:
+    build:
+      context: .
+      dockerfile: bussinesdomain/suppliers/Dockerfile
+    container_name: inventra-suppliers
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_SERVER_URL: http://eurekaserver:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/suppliers_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-inventra}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-inventra}
+    ports:
+      - "8082:8080"
+    depends_on:
+      catalog:
+        condition: service_started
+    networks:
+      - inventra-net
+
+  purchases:
+    build:
+      context: .
+      dockerfile: bussinesdomain/purchases/Dockerfile
+    container_name: inventra-purchases
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_SERVER_URL: http://eurekaserver:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/purchases_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-inventra}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-inventra}
+    ports:
+      - "8083:8080"
+    depends_on:
+      suppliers:
+        condition: service_started
+    networks:
+      - inventra-net
+
+  sales:
+    build:
+      context: .
+      dockerfile: bussinesdomain/sales/Dockerfile
+    container_name: inventra-sales
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_SERVER_URL: http://eurekaserver:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sales_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-inventra}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-inventra}
+    ports:
+      - "8084:8080"
+    depends_on:
+      purchases:
+        condition: service_started
+    networks:
+      - inventra-net
+
+  accounts:
+    build:
+      context: .
+      dockerfile: bussinesdomain/accounts/Dockerfile
+    container_name: inventra-accounts
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_SERVER_URL: http://eurekaserver:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/accounts_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-inventra}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-inventra}
+    ports:
+      - "8085:8080"
+    depends_on:
+      sales:
+        condition: service_started
+    networks:
+      - inventra-net
+
+  springbootadmin:
+    build:
+      context: .
+      dockerfile: infraestructure/springbootadmin/Dockerfile
+    container_name: inventra-admin
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_SERVICE_URL: http://eurekaserver:8761/eureka/
+      SERVER_PORT: 8090
+    ports:
+      - "8090:8090"
+    depends_on:
+      accounts:
+        condition: service_started
+    networks:
+      - inventra-net
+
+networks:
+  inventra-net:
+    driver: bridge
+
+volumes:
+  mysql_data:

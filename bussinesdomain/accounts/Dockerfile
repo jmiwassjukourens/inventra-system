@@ -4,15 +4,15 @@ WORKDIR /workspace
 COPY pom.xml pom.xml
 COPY bussinesdomain/pom.xml bussinesdomain/pom.xml
 COPY infraestructure/pom.xml infraestructure/pom.xml
-COPY bussinesdomain/catalog/pom.xml bussinesdomain/catalog/pom.xml
-COPY bussinesdomain/catalog/src bussinesdomain/catalog/src
+COPY bussinesdomain/accounts/pom.xml bussinesdomain/accounts/pom.xml
+COPY bussinesdomain/accounts/src bussinesdomain/accounts/src
 
-RUN mvn -pl bussinesdomain/catalog -am clean package -DskipTests
+RUN mvn -pl bussinesdomain/accounts -am clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
-COPY --from=builder /workspace/bussinesdomain/catalog/target/*.jar app.jar
+COPY --from=builder /workspace/bussinesdomain/accounts/target/*.jar app.jar
 
 ENV JAVA_OPTS=""
 EXPOSE 8080

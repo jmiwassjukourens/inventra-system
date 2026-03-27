@@ -1,0 +1,19 @@
+FROM maven:3.9.9-eclipse-temurin-21 AS builder
+WORKDIR /workspace
+
+COPY pom.xml pom.xml
+COPY infraestructure/pom.xml infraestructure/pom.xml
+COPY infraestructure/springbootadmin/pom.xml infraestructure/springbootadmin/pom.xml
+COPY infraestructure/springbootadmin/src infraestructure/springbootadmin/src
+
+RUN mvn -pl infraestructure/springbootadmin -am clean package -DskipTests
+
+FROM eclipse-temurin:21-jre-jammy
+WORKDIR /app
+
+COPY --from=builder /workspace/infraestructure/springbootadmin/target/*.jar app.jar
+
+ENV JAVA_OPTS=""
+EXPOSE 8090
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
