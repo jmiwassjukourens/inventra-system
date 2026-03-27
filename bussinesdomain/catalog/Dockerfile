@@ -1,11 +1,10 @@
 FROM maven:3.9.9-eclipse-temurin-21 AS builder
 WORKDIR /workspace
 
-COPY pom.xml pom.xml
-COPY bussinesdomain/pom.xml bussinesdomain/pom.xml
-COPY infraestructure/pom.xml infraestructure/pom.xml
-COPY bussinesdomain/catalog/pom.xml bussinesdomain/catalog/pom.xml
-COPY bussinesdomain/catalog/src bussinesdomain/catalog/src
+# Copy the full reactor: root + both aggregators list all child modules; Maven fails if any are missing.
+COPY pom.xml .
+COPY infraestructure ./infraestructure
+COPY bussinesdomain ./bussinesdomain
 
 RUN mvn -pl bussinesdomain/catalog -am clean package -DskipTests
 

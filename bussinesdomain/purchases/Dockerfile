@@ -1,11 +1,9 @@
 FROM maven:3.9.9-eclipse-temurin-21 AS builder
 WORKDIR /workspace
 
-COPY pom.xml pom.xml
-COPY bussinesdomain/pom.xml bussinesdomain/pom.xml
-COPY infraestructure/pom.xml infraestructure/pom.xml
-COPY bussinesdomain/purchases/pom.xml bussinesdomain/purchases/pom.xml
-COPY bussinesdomain/purchases/src bussinesdomain/purchases/src
+COPY pom.xml .
+COPY infraestructure ./infraestructure
+COPY bussinesdomain ./bussinesdomain
 
 RUN mvn -pl bussinesdomain/purchases -am clean package -DskipTests
 

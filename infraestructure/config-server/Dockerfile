@@ -1,10 +1,9 @@
 FROM maven:3.9.9-eclipse-temurin-21 AS builder
 WORKDIR /workspace
 
-COPY pom.xml pom.xml
-COPY infraestructure/pom.xml infraestructure/pom.xml
-COPY infraestructure/config-server/pom.xml infraestructure/config-server/pom.xml
-COPY infraestructure/config-server/src infraestructure/config-server/src
+COPY pom.xml .
+COPY infraestructure ./infraestructure
+COPY bussinesdomain ./bussinesdomain
 
 RUN mvn -pl infraestructure/config-server -am clean package -DskipTests
 
