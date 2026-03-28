@@ -35,6 +35,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     @Transactional
     public PurchaseResponseDTO create(PurchaseRequestDTO request) {
+        System.out.println("Creating purchase order for supplierId: " + request.getSupplierId() + " with " + request.getItems().size() + " items.");
 
         // 1. Create order
         PurchaseOrder order = PurchaseOrder.builder()
@@ -75,6 +76,7 @@ public class PurchaseServiceImpl implements PurchaseService {
 
             // 4. Call inventory service (IMPORTANT: fail fast)
             try {
+                System.out.println("Creating stock movement for productId: " + itemDTO.getProductId() + " quantity: " + itemDTO.getQuantity());
                 inventoryClient.createStockMovement(movement);
             } catch (Exception e) {
                 // rollback purchase if inventory fails

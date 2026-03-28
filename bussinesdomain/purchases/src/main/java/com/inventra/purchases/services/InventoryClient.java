@@ -11,24 +11,21 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 @RequiredArgsConstructor
 public class InventoryClient {
 
-    private final WebClient inventoryWebClient;
+    
+     private final WebClient.Builder webClientBuilder;
 
     public void createStockMovement(StockMovementDTO dto) {
         try {
-            System.out.println("Creating stock movement for product " + dto.getProductId() + " with quantity " + dto.getQuantity());
-            System.out.println("Calling URL: http://catalog/api/stocks/movements");
-            System.out.println("WebClient instance: " + inventoryWebClient);
-            inventoryWebClient.post()
-                    .uri("/api/stocks/movements")
-                    .bodyValue(dto)
-                    .retrieve()
-                    .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(), response ->
-                            response.bodyToMono(String.class)
-                                    .defaultIfEmpty("")
-                                    .map(body -> new ExternalServiceException(
-                                            "Catalog error: " + response.statusCode() + " " + body)))
-                    .toBodilessEntity()
-                    .block();
+
+                webClientBuilder
+                        .baseUrl("http://catalog")
+                        .build()
+                        .post()
+                        .uri("/api/stocks/movements")
+                        .bodyValue(dto)
+                        .retrieve()
+                        .toBodilessEntity()
+                        .block();
         } catch (WebClientResponseException e) {
             throw new ExternalServiceException("Catalog error: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
         } catch (ExternalServiceException e) {

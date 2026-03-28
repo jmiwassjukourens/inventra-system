@@ -13,31 +13,15 @@ import java.time.Duration;
 @Configuration
 public class WebClientConfig {
 
-    private static HttpClient httpClient() {
-        return HttpClient.create()
-                .responseTimeout(Duration.ofSeconds(15))
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5_000);
-    }
-
     @Bean
     @LoadBalanced
     public WebClient.Builder webClientBuilder() {
-        return WebClient.builder();
-    }
 
-    @Bean
-    public WebClient inventoryWebClient(@LoadBalanced WebClient.Builder builder) {
-        return builder.clone()
-                .clientConnector(new ReactorClientHttpConnector(httpClient()))
-                .baseUrl("http://catalog")
-                .build();
-    }
+        HttpClient httpClient = HttpClient.create()
+                .responseTimeout(Duration.ofSeconds(15))
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5_000);
 
-    @Bean
-    public WebClient accountsWebClient(@LoadBalanced WebClient.Builder builder) {
-        return builder.clone()
-                .clientConnector(new ReactorClientHttpConnector(httpClient()))
-                .baseUrl("http://accounts")
-                .build();
+        return WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient));
     }
 }

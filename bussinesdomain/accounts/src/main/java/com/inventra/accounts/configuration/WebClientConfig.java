@@ -16,17 +16,12 @@ public class WebClientConfig {
     @Bean
     @LoadBalanced
     public WebClient.Builder webClientBuilder() {
-        return WebClient.builder();
-    }
 
-    @Bean
-    public WebClient salesWebClient(@LoadBalanced WebClient.Builder builder) {
         HttpClient httpClient = HttpClient.create()
                 .responseTimeout(Duration.ofSeconds(15))
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5_000);
-        return builder.clone()
-                .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .baseUrl("http://sales")
-                .build();
+
+        return WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient));
     }
 }

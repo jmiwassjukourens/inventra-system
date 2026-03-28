@@ -7,31 +7,39 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+
 @Component
-@RequiredArgsConstructor
 public class InventoryClient {
 
-    private final WebClient inventoryWebClient;
+    private final WebClient webClient;
+
+    public InventoryClient(WebClient.Builder builder) {
+        this.webClient = builder.baseUrl("http://catalog").build();
+    }
 
     public void createStockMovement(StockMovementDTO dto) {
+
         try {
-            inventoryWebClient.post()
+
+            webClient.post()
                     .uri("/api/stocks/movements")
                     .bodyValue(dto)
                     .retrieve()
-                    .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(), response ->
-                            response.bodyToMono(String.class)
+                    .onStatus(
+                            status -> status.is4xxClientError() || status.is5xxServerError(),
+                            response -> response.bodyToMono(String.class)
                                     .defaultIfEmpty("")
                                     .map(body -> new ExternalServiceException(
                                             "Catalog error: " + response.statusCode() + " " + body)))
                     .toBodilessEntity()
                     .block();
+
         } catch (WebClientResponseException e) {
-            throw new ExternalServiceException("Catalog error: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
-        } catch (ExternalServiceException e) {
-            throw e;
+            throw new ExternalServiceException(
+                    "Catalog error: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
+
         } catch (Exception e) {
-            throw new ExternalServiceException("Catalog unavailable: " + e.getMessage());
+            throw new ExternalServiceException("Catalog unavailable" + e.getMessage());
         }
     }
 }

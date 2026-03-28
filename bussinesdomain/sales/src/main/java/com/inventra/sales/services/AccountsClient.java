@@ -8,30 +8,37 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Component
-@RequiredArgsConstructor
 public class AccountsClient {
 
-    private final WebClient accountsWebClient;
+    private final WebClient webClient;
+
+    public AccountsClient(WebClient.Builder builder) {
+        this.webClient = builder.baseUrl("http://accounts").build();
+    }
 
     public void registerSaleDebt(SaleDebtRequestDTO dto) {
+
         try {
-            accountsWebClient.post()
+
+            webClient.post()
                     .uri("/api/internal/account-movements/sale-debt")
                     .bodyValue(dto)
                     .retrieve()
-                    .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(), response ->
-                            response.bodyToMono(String.class)
+                    .onStatus(
+                            status -> status.is4xxClientError() || status.is5xxServerError(),
+                            response -> response.bodyToMono(String.class)
                                     .defaultIfEmpty("")
                                     .map(body -> new ExternalServiceException(
                                             "Accounts error: " + response.statusCode() + " " + body)))
                     .toBodilessEntity()
                     .block();
+
         } catch (WebClientResponseException e) {
-            throw new ExternalServiceException("Accounts error: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
-        } catch (ExternalServiceException e) {
-            throw e;
+            throw new ExternalServiceException(
+                    "Accounts error: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
+
         } catch (Exception e) {
-            throw new ExternalServiceException("Accounts unavailable: " + e.getMessage());
+            throw new ExternalServiceException("Accounts unavailable" + e.getMessage());
         }
     }
 }

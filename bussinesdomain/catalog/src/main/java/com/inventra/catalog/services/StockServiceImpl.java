@@ -85,7 +85,7 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public Integer getAvailableStock(Long productId) {
         return stockRepository.findByProductId(productId)
                 .map(Stock::getQuantity)
@@ -93,7 +93,7 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public Page<StockMovementResponseDTO> searchMovements(LocalDateTime from, LocalDateTime to, String type,
                                                           Long productId, Pageable pageable) {
         Specification<StockMovement> spec =
@@ -101,6 +101,7 @@ public class StockServiceImpl implements StockService {
         return movementRepository.findAll(spec, pageable).map(this::mapMovement);
     }
 
+    @Transactional
     private StockMovementResponseDTO mapMovement(StockMovement m) {
         return StockMovementResponseDTO.builder()
                 .id(m.getId())

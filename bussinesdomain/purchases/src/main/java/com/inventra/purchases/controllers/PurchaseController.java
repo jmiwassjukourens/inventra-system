@@ -46,6 +46,7 @@ public class PurchaseController {
     public ResponseEntity<PurchaseResponseDTO> create(
             @RequestBody PurchaseRequestDTO request) {
 
+                System.out.println("Received purchase request: " + request);
         return ResponseEntity.ok(purchaseService.create(request));
     }
 
