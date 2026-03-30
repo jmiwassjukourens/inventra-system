@@ -64,6 +64,32 @@ services:
     networks:
       - inventra-net
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: inventra-keycloak
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+
+      KC_DB: mysql
+      KC_DB_URL: jdbc:mysql://mysql:3306/keycloak_db
+      KC_DB_USERNAME: ${MYSQL_USER}
+      KC_DB_PASSWORD: ${MYSQL_PASSWORD}
+
+      KC_HOSTNAME: ${KC_HOSTNAME}
+      KC_HTTP_PORT: 8080
+
+    ports:
+      - "8180:8080"
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    networks:
+      - inventra-net
+
   catalog:
     build:
       context: .
