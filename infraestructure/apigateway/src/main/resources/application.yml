@@ -1,0 +1,76 @@
+# Local defaults; override via Spring Cloud Config Server (name: api-gateway) or env vars.
+spring:
+  application:
+    name: api-gateway
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://config-server:8888}
+  cloud:
+    config:
+      name: api-gateway
+      profile: ${SPRING_CLOUD_CONFIG_PROFILE:${SPRING_PROFILES_ACTIVE:local}}
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: false
+          routes:
+            - id: keycloak-adapter-auth
+              uri: lb://keycloak-adapter
+              predicates:
+                - Path=/api/auth/**
+            - id: catalog-service
+              uri: lb://catalog
+              predicates:
+                - Path=/api/products/**,/api/stocks/**
+            - id: suppliers-service
+              uri: lb://suppliers
+              predicates:
+                - Path=/api/suppliers/**
+            - id: purchases-service
+              uri: lb://purchases
+              predicates:
+                - Path=/api/purchases/**
+            - id: sales-service
+              uri: lb://sales
+              predicates:
+                - Path=/api/sales/**,/api/internal/sales/**
+            - id: accounts-service
+              uri: lb://accounts
+              predicates:
+                - Path=/api/customers/**,/api/accounts/**,/api/internal/account-movements/**
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/inventra}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://eurekaserver:8761/eureka}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: ${GATEWAY_LOG_LEVEL:INFO}
+    com.infraestructure.apigateway: ${APIGATEWAY_APP_LOG_LEVEL:INFO}

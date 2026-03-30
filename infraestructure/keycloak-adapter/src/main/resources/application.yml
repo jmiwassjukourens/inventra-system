@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: keycloak-adapter
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://config-server:8888}
+  cloud:
+    config:
+      name: keycloak-adapter
+      profile: ${SPRING_CLOUD_CONFIG_PROFILE:${SPRING_PROFILES_ACTIVE:local}}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/inventra}
+
+server:
+  port: ${SERVER_PORT:8086}
+
+keycloak:
+  server-url: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}
+  realm: ${KEYCLOAK_REALM:inventra}
+  client-id: ${KEYCLOAK_CLIENT_ID:}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://eurekaserver:8761/eureka}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

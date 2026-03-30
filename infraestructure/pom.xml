@@ -22,6 +22,8 @@
         <module>config-server</module>
         <module>eurekaserver</module>
         <module>springbootadmin</module>
+        <module>apigateway</module>
+        <module>keycloak-adapter</module>
     </modules>
 
 

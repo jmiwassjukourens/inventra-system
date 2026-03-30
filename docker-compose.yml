@@ -90,6 +90,66 @@ services:
     networks:
       - inventra-net
 
+  keycloak-adapter:
+    build:
+      context: .
+      dockerfile: infraestructure/keycloak-adapter/Dockerfile
+    container_name: inventra-keycloak-adapter
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_SERVER_URL: http://eurekaserver:8761/eureka
+      SERVER_PORT: 8080
+      KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI:-http://keycloak:8080/realms/inventra}
+      KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL:-http://keycloak:8080}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-inventra}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-}
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-}
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 50s
+    networks:
+      - inventra-net
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: infraestructure/apigateway/Dockerfile
+    container_name: inventra-api-gateway
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_SERVER_URL: http://eurekaserver:8761/eureka
+      SERVER_PORT: 8080
+      KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI:-http://keycloak:8080/realms/inventra}
+    ports:
+      - "8080:8080"
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+      keycloak-adapter:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    networks:
+      - inventra-net
+
   catalog:
     build:
       context: .
@@ -102,8 +162,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/catalog_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-inventra}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-inventra}
-    ports:
-      - "8081:8080"
     depends_on:
       config-server:
         condition: service_healthy
@@ -126,8 +184,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/suppliers_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-inventra}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-inventra}
-    ports:
-      - "8082:8080"
     depends_on:
       catalog:
         condition: service_started
@@ -146,8 +202,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/purchases_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-inventra}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-inventra}
-    ports:
-      - "8083:8080"
     depends_on:
       suppliers:
         condition: service_started
@@ -166,8 +220,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sales_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-inventra}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-inventra}
-    ports:
-      - "8084:8080"
     depends_on:
       purchases:
         condition: service_started
@@ -186,8 +238,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/accounts_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-inventra}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-inventra}
-    ports:
-      - "8085:8080"
     depends_on:
       sales:
         condition: service_started

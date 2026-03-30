@@ -1,0 +1,22 @@
+spring:
+  config:
+    import: ""
+  cloud:
+    discovery:
+      enabled: false
+    config:
+      enabled: false
+  eureka:
+    client:
+      enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret-key: "0123456789012345678901234567890123456789012345678901234567890123"
+
+keycloak:
+  server-url: http://localhost:9999
+  realm: inventra
+  client-id: test-client
+  client-secret: test-secret
