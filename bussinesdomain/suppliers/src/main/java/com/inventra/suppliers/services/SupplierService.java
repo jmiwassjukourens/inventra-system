@@ -18,6 +18,8 @@ public interface SupplierService {
 
     SupplierResponseDTO getById(Long id);
 
+    SupplierResponseDTO update(Long id, SupplierRequestDTO dto);
+
     void delete(Long id);
 
     void addProductToSupplier(SupplierProductDTO dto);

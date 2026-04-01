@@ -67,6 +67,14 @@ public class SupplierController {
         return ResponseEntity.ok(supplierService.getById(id));
     }
 
+    @Operation(summary = "Actualizar proveedor")
+    @PutMapping("/{id}")
+    public ResponseEntity<SupplierResponseDTO> update(
+            @Parameter(description = "ID del proveedor", example = "1") @PathVariable Long id,
+            @RequestBody SupplierRequestDTO dto) {
+        return ResponseEntity.ok(supplierService.update(id, dto));
+    }
+
     @Operation(summary = "Eliminar proveedor")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Proveedor eliminado"),

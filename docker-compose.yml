@@ -121,6 +121,23 @@ services:
     networks:
       - inventra-net
 
+  frontend:
+    build:
+      context: ./bussinesdomain/frontend
+      dockerfile: Dockerfile
+      args:
+        API_GATEWAY_URL: http://api-gateway:8080
+    container_name: inventra-frontend
+    environment:
+      API_GATEWAY_URL: http://api-gateway:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - inventra-net
+
   api-gateway:
     build:
       context: .

@@ -63,6 +63,19 @@ public class SupplierServiceImpl implements SupplierService {
 
     @Override
     @Transactional
+    public SupplierResponseDTO update(Long id, SupplierRequestDTO dto) {
+        Supplier supplier = supplierRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Supplier not found"));
+        supplier.setName(dto.getName());
+        supplier.setEmail(dto.getEmail());
+        supplier.setPhone(dto.getPhone());
+        supplier.setAddress(dto.getAddress());
+        supplier.setActive(dto.isActive());
+        return mapToDTO(supplierRepository.save(supplier));
+    }
+
+    @Override
+    @Transactional
     public void delete(Long id) {
         supplierRepository.deleteById(id);
     }
